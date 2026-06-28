@@ -28,6 +28,10 @@ interface Commit {
   department?: string[];
   module?: string[];
   module_classification_method?: string[];
+  // AI insight fields (written back by /api/github/analyze)
+  aiRiskLevel?: 'LOW' | 'MEDIUM' | 'CRITICAL';
+  aiSummaryLine1?: string;
+  aiSummaryLine2?: string;
 }
 
 interface Repo {
@@ -71,6 +75,13 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// Risk badge config
+const RISK_CFG = {
+  LOW:      { label: 'LOW',      bg: 'rgba(34,197,94,0.08)',  border: 'rgba(34,197,94,0.28)',  text: '#16a34a' },
+  MEDIUM:   { label: 'MEDIUM',   bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.28)', text: '#d97706' },
+  CRITICAL: { label: 'CRITICAL', bg: 'rgba(239,68,68,0.08)',  border: 'rgba(239,68,68,0.28)',  text: '#dc2626' },
+} as const;
+
 // Department pill colours (consistent, not random)
 const DEPT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   frontend:     { bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.25)',  text: '#3b82f6' },
@@ -111,6 +122,7 @@ export default function CommitsPage() {
   const [filterModule,  setFilterModule]  = useState('all');
   const [loading,       setLoading]       = useState(true);
   const [liveCount,     setLiveCount]     = useState(0);
+  const [analyzingSet,  setAnalyzingSet]  = useState<Set<string>>(new Set());
   const prevCountRef = useRef(0);
 
   // Load repos list for filter
@@ -241,6 +253,23 @@ export default function CommitsPage() {
 
   const handleCommitClick = (commit: Commit) => {
     router.push(`/commits/${commit.sha}?repoId=${commit.repoId}`);
+  };
+
+  const handleAnalyze = async (commit: Commit, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (analyzingSet.has(commit.sha)) return;
+    setAnalyzingSet(prev => new Set(prev).add(commit.sha));
+    try {
+      await fetch('/api/github/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sha: commit.sha, repoId: commit.repoId }),
+      });
+      // Result is written back to commits/{sha} by the API;
+      // Firestore real-time listener picks it up automatically.
+    } finally {
+      setAnalyzingSet(prev => { const s = new Set(prev); s.delete(commit.sha); return s; });
+    }
   };
 
   return (
@@ -436,6 +465,41 @@ export default function CommitsPage() {
                       </span>
                     ))}
                   </div>
+
+                  {/* AI insight strip */}
+                  {commit.aiRiskLevel ? (
+                    <div className={`${styles.insightStrip} ${styles['insightStrip' + commit.aiRiskLevel]}`}>
+                      <span
+                        className={styles.insightRiskBadge}
+                        style={{
+                          background: RISK_CFG[commit.aiRiskLevel].bg,
+                          borderColor: RISK_CFG[commit.aiRiskLevel].border,
+                          color: RISK_CFG[commit.aiRiskLevel].text,
+                        }}
+                      >
+                        {commit.aiRiskLevel === 'CRITICAL' && '🔴 '}
+                        {commit.aiRiskLevel === 'MEDIUM'   && '⚠ '}
+                        {commit.aiRiskLevel === 'LOW'      && '✓ '}
+                        {RISK_CFG[commit.aiRiskLevel].label}
+                      </span>
+                      <div className={styles.insightLines}>
+                        {commit.aiSummaryLine1 && <span className={styles.insightLine1}>{commit.aiSummaryLine1}</span>}
+                        {commit.aiSummaryLine2 && <span className={styles.insightLine2}>{commit.aiSummaryLine2}</span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className={`${styles.analyzeBtn} ${analyzingSet.has(commit.sha) ? styles.analyzeBtnLoading : ''}`}
+                      onClick={e => handleAnalyze(commit, e)}
+                      disabled={analyzingSet.has(commit.sha)}
+                    >
+                      {analyzingSet.has(commit.sha) ? (
+                        <><span className={styles.analyzingDot}/>Analyzing…</>
+                      ) : (
+                        <>❖ Analyze with AI</>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* SHA */}

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import MainLayout from '@/components/layout/MainLayout';
+import InsightPanel from '@/components/InsightPanel';
 import styles from '../commits.module.css';
 
 interface ChangedFile {
@@ -215,6 +216,7 @@ export default function CommitDetailPage({
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [commitFilesLoaded, setCommitFilesLoaded] = useState(false);
 
   // 1. Resolve repoId if missing from searchParams (by looking up commit in Firestore)
   useEffect(() => {
@@ -261,6 +263,7 @@ export default function CommitDetailPage({
       }
       const data: CommitFilesResult = await res.json();
       setResult(data);
+      setCommitFilesLoaded(true);
       if (data.changed_files.length > 0) {
         setExpanded({ [data.changed_files[0].filename]: true });
       }
@@ -370,6 +373,11 @@ export default function CommitDetailPage({
                   </>
                 )}
               </div>
+
+              {/* AI Insight Panel — auto-triggers 4-agent pipeline */}
+              {repoId && (
+                <InsightPanel sha={sha} repoId={repoId} commitFilesLoaded={commitFilesLoaded} />
+              )}
 
               {/* Accordion File list */}
               {result.changed_files.length === 0 ? (
