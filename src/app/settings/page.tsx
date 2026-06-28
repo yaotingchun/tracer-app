@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout  from '@/components/layout/MainLayout';
 import RepoConnector from '@/components/settings/RepoConnector';
 import RepoList    from '@/components/settings/RepoList';
@@ -8,6 +8,11 @@ import styles      from './settings.module.css';
 
 export default function SettingsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <MainLayout>
@@ -50,7 +55,7 @@ export default function SettingsPage() {
           </p>
           <ol className={styles.infoList}>
             <li>Go to your repository → <strong>Settings</strong> → <strong>Webhooks</strong> → <strong>Add webhook</strong></li>
-            <li>Set <strong>Payload URL</strong> to your deployed domain: <code>{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api/github/webhook</code></li>
+            <li>Set <strong>Payload URL</strong> to your deployed domain: <code>{mounted ? window.location.origin : 'https://your-domain.com'}/api/github/webhook</code></li>
             <li>Set <strong>Content type</strong> to <code>application/json</code></li>
             <li>Select events: <code>push</code>, <code>pull_request</code>, <code>create</code>, <code>delete</code></li>
             <li>Click <strong>Add webhook</strong></li>

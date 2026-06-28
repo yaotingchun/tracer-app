@@ -121,6 +121,12 @@ export default function CommitsPage() {
       .catch(() => {});
   }, []);
 
+  // Reset other filters when changing repo
+  useEffect(() => {
+    setFilterModule('all');
+    setFilterDept('all');
+  }, [filterRepo]);
+
   // Real-time Firestore listener
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -175,6 +181,24 @@ export default function CommitsPage() {
       uniqueModules: sortWithUnclassifiedLast(Array.from(modules)),
     };
   }, [commits]);
+
+  // Determine the active modules for the selected repository (custom modules or dynamically computed modules)
+  const activeModules = useMemo(() => {
+    if (filterRepo === 'all') {
+      return uniqueModules;
+    }
+    const repoDetails = repos.find(r => r.id === filterRepo) as any;
+    if (repoDetails && repoDetails.customModules && repoDetails.customModules.length > 0) {
+      const sorted = [...repoDetails.customModules];
+      if (!sorted.includes('unclassified')) {
+        sorted.push('unclassified');
+      }
+      return sorted.sort((a, b) =>
+        a === 'unclassified' ? 1 : b === 'unclassified' ? -1 : a.localeCompare(b)
+      );
+    }
+    return uniqueModules;
+  }, [filterRepo, repos, uniqueModules]);
 
   // Multi-stage filter pipeline
   const displayed = useMemo(() => {
@@ -299,7 +323,7 @@ export default function CommitsPage() {
                 {/* Module group */}
                 <div className={styles.pillGroup}>
                   <span className={styles.pillSectionLabel}>Module</span>
-                  {['all', ...uniqueModules].map(opt => (
+                  {['all', ...activeModules].map(opt => (
                     <button
                       key={opt}
                       onClick={() => setFilterModule(opt)}
