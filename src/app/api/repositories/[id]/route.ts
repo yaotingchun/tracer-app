@@ -61,10 +61,46 @@ export async function DELETE(
     const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
+    console.log(`[DELETE /api/repositories/${id}] Starting repository and data cleanup`);
+
+    // ── 1. Query all commits belonging to this repository ────────────────────
+    const commitsSnap = await adminDb
+      .collection('commits')
+      .where('repoId', '==', id)
+      .get();
+
+    const commitDocs = commitsSnap.docs;
+    console.log(`[DELETE /api/repositories/${id}] Found ${commitDocs.length} commits to clean up`);
+
+    // ── 2. Batch delete commits, commitFiles caches, and commitInsights ─────
+    // Firestore batch limit is 500 operations. We'll commit in chunks of 150 commits
+    // (since each commit has up to 3 deletions: commits, commitFiles, commitInsights).
+    const chunkSize = 150;
+    for (let i = 0; i < commitDocs.length; i += chunkSize) {
+      const chunk = commitDocs.slice(i, i + chunkSize);
+      const batch = adminDb.batch();
+
+      for (const doc of chunk) {
+        const sha = doc.id;
+        // Delete commit doc
+        batch.delete(adminDb.collection('commits').doc(sha));
+        // Delete commitFiles cache doc
+        batch.delete(adminDb.collection('commitFiles').doc(sha));
+        // Delete commitInsights cache doc
+        batch.delete(adminDb.collection('commitInsights').doc(sha));
+      }
+
+      await batch.commit();
+      console.log(`[DELETE /api/repositories/${id}] Deleted batch of ${chunk.length} commits`);
+    }
+
+    // ── 3. Delete the repository document itself ─────────────────────────────
     await adminDb.collection('repositories').doc(id).delete();
+    console.log(`[DELETE /api/repositories/${id}] Repository document deleted successfully`);
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[DELETE /api/repositories/[id]]', err);
-    return NextResponse.json({ error: 'Failed to delete repository' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete repository and associated data' }, { status: 500 });
   }
 }
