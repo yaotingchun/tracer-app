@@ -74,6 +74,15 @@ The result is a living, real-time map of engineering impact — delivered as an 
 
 ---
 
+### 🌟 Unique Selling Points (USPs)
+
+* **Customizable Business Logic**: Upload PDF documentation or input a custom business description directly on the repository settings page. This builds a repository-specific knowledge base that the Vertex AI agents consult to align technical code changes with your actual business domain and product logic.
+* **4-Agent Sequential AI Pipeline**: Rather than relying on simple, single-prompt AI queries, TRACER implements a sequential multi-agent pipeline. Each specialized agent (Understanding → Dependency → Prediction → Recommendations) processes the outputs of its predecessor to build rich, contextual intelligence.
+* **Directional Cross-Team Impact Matrix**: Visualize exactly who is impacting whom. The interactive reports dashboard displays directional dependencies between engineering teams to quickly resolve communications bottlenecks.
+* **Proactive Mitigation & Rollback Playbooks**: TRACER doesn't just alert; it guides. Every prediction comes with specific testing instructions, team notifications, and priority rollback playbooks to reduce MTTR.
+
+---
+
 ### SDG Alignment
 
 * **SDG 9 — Industry, Innovation, and Infrastructure**: Drives digital transformation in software engineering by replacing manual, error-prone cross-team communication with AI-powered, real-time dependency awareness.
