@@ -8,6 +8,11 @@ import { db } from '@/lib/firebase';
 import MainLayout from '@/components/layout/MainLayout';
 import styles from './commits.module.css';
 
+type ViewMode = 'list' | 'matrix';
+
+// ── Known teams — used as fallback column set ──────────────────
+const KNOWN_TEAMS = ['frontend', 'backend', 'data', 'security'];
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Commit {
@@ -53,6 +58,215 @@ const ExternalIcon = () => (
     <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
   </svg>
 );
+
+const ListIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="8" y1="6" x2="21" y2="6"/>
+    <line x1="8" y1="12" x2="21" y2="12"/>
+    <line x1="8" y1="18" x2="21" y2="18"/>
+    <line x1="3" y1="6" x2="3.01" y2="6"/>
+    <line x1="3" y1="12" x2="3.01" y2="12"/>
+    <line x1="3" y1="18" x2="3.01" y2="18"/>
+  </svg>
+);
+
+const MatrixIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+);
+
+// ── Team Impact Matrix View ────────────────────────────────────
+
+const TEAM_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
+  frontend: { bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.22)',  text: '#2563eb', dot: '#3b82f6' },
+  backend:  { bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.22)',   text: '#16a34a', dot: '#22c55e' },
+  data:     { bg: 'rgba(168,85,247,0.08)',  border: 'rgba(168,85,247,0.22)',  text: '#7c3aed', dot: '#a855f7' },
+  security: { bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)',   text: '#dc2626', dot: '#ef4444' },
+  qa:       { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.22)',  text: '#b45309', dot: '#f59e0b' },
+  devops:   { bg: 'rgba(99,102,241,0.08)',  border: 'rgba(99,102,241,0.22)',  text: '#4338ca', dot: '#6366f1' },
+};
+
+function teamColor(team: string) {
+  return TEAM_COLORS[team.toLowerCase()] ?? {
+    bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.2)', text: '#6b7280', dot: '#9ca3af',
+  };
+}
+
+function TeamImpactMatrixView({
+  commits,
+  teams,
+  onRowClick,
+}: {
+  commits: Commit[];
+  teams: string[];
+  onRowClick: (commit: Commit) => void;
+}) {
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<string | null>(null);
+
+  if (commits.length === 0) {
+    return (
+      <div className={styles.matrixEmpty}>
+        <p>No commits to display.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.matrixWrapper}>
+      <div className={styles.matrixScroll}>
+        <table className={styles.matrixTable} aria-label="Commit team impact matrix">
+          <thead>
+            <tr>
+              {/* Corner */}
+              <th className={styles.matrixCorner}>
+                <span className={styles.matrixCornerLabel}>Commit / Team</span>
+              </th>
+              {teams.map(team => {
+                const col = teamColor(team);
+                const isHov = hoveredCol === team;
+                return (
+                  <th
+                    key={team}
+                    className={styles.matrixColHead}
+                    style={isHov ? { background: col.bg, color: col.text } : undefined}
+                  >
+                    <span className={styles.matrixTeamDot} style={{ background: col.dot }} />
+                    {capitalize(team)}
+                  </th>
+                );
+              })}
+              <th className={styles.matrixColHead} style={{ minWidth: 80 }}>Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            {commits.map((commit, i) => {
+              const depts = new Set((commit.department ?? []).map(d => d.toLowerCase()));
+              const affected = teams.filter(t => depts.has(t.toLowerCase()));
+              const isHov = hoveredRow === commit.id;
+
+              return (
+                <tr
+                  key={commit.id}
+                  className={styles.matrixRow}
+                  style={{
+                    background: isHov ? 'var(--color-surface-1)' : undefined,
+                    animationDelay: `${i * 30}ms`,
+                  }}
+                  onMouseEnter={() => setHoveredRow(commit.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  onClick={() => onRowClick(commit)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onRowClick(commit); }}
+                  aria-label={`Commit: ${commit.message}`}
+                >
+                  {/* Commit info cell */}
+                  <td className={styles.matrixCommitCell}>
+                    <div className={styles.matrixCommitInfo}>
+                      <span className={styles.matrixSha}>
+                        {commit.shortSha ?? commit.sha.slice(0, 7)}
+                      </span>
+                      <span className={styles.matrixMsg}>
+                        {commit.message.split('\n')[0]}
+                      </span>
+                    </div>
+                    <div className={styles.matrixCommitMeta}>
+                      <span>{commit.authorLogin ?? commit.author}</span>
+                      <span className={styles.matrixDot}>·</span>
+                      <span>{timeAgo(commit.date)}</span>
+                      {commit.aiRiskLevel && (
+                        <span
+                          className={styles.matrixRiskBadge}
+                          style={{
+                            background: RISK_CFG[commit.aiRiskLevel].bg,
+                            borderColor: RISK_CFG[commit.aiRiskLevel].border,
+                            color: RISK_CFG[commit.aiRiskLevel].text,
+                          }}
+                        >
+                          {commit.aiRiskLevel}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Team checkmark cells */}
+                  {teams.map(team => {
+                    const hit = depts.has(team.toLowerCase());
+                    const col = teamColor(team);
+                    const isColHov = hoveredCol === team;
+                    return (
+                      <td
+                        key={team}
+                        className={`${styles.matrixCheckCell} ${hit ? styles.matrixCheckCellHit : ''}`}
+                        style={hit ? { background: col.bg } : isColHov ? { background: 'var(--color-surface-1)' } : undefined}
+                        onMouseEnter={() => setHoveredCol(team)}
+                        onMouseLeave={() => setHoveredCol(null)}
+                        title={hit ? `${capitalize(team)} is affected` : `${capitalize(team)} not affected`}
+                      >
+                        {hit ? (
+                          <span className={styles.matrixCheck} style={{ color: col.text }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </span>
+                        ) : (
+                          <span className={styles.matrixMiss}>—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+
+                  {/* Impact count */}
+                  <td className={styles.matrixScopeCell}>
+                    {affected.length > 0 ? (
+                      <span
+                        className={styles.matrixScopeBadge}
+                        style={{
+                          background: affected.length >= 3 ? 'rgba(239,68,68,0.1)' : affected.length === 2 ? 'rgba(245,158,11,0.1)' : 'rgba(59,130,246,0.1)',
+                          color: affected.length >= 3 ? '#dc2626' : affected.length === 2 ? '#d97706' : '#2563eb',
+                          borderColor: affected.length >= 3 ? 'rgba(239,68,68,0.25)' : affected.length === 2 ? 'rgba(245,158,11,0.25)' : 'rgba(59,130,246,0.25)',
+                        }}
+                      >
+                        {affected.length} team{affected.length !== 1 ? 's' : ''}
+                      </span>
+                    ) : (
+                      <span className={styles.matrixScopeNone}>–</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Legend */}
+      <div className={styles.matrixLegend}>
+        {teams.map(team => {
+          const col = teamColor(team);
+          return (
+            <span key={team} className={styles.matrixLegendItem}>
+              <span className={styles.matrixLegendDot} style={{ background: col.dot }} />
+              {capitalize(team)}
+            </span>
+          );
+        })}
+        <span className={styles.matrixLegendSep} />
+        <span className={styles.matrixLegendItem} style={{ color: 'var(--color-text-muted)' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Affected
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -123,6 +337,7 @@ export default function CommitsPage() {
   const [loading,       setLoading]       = useState(true);
   const [liveCount,     setLiveCount]     = useState(0);
   const [analyzingSet,  setAnalyzingSet]  = useState<Set<string>>(new Set());
+  const [viewMode,      setViewMode]      = useState<ViewMode>('list');
   const prevCountRef = useRef(0);
 
   // Load repos list for filter
@@ -193,6 +408,13 @@ export default function CommitsPage() {
       uniqueModules: sortWithUnclassifiedLast(Array.from(modules)),
     };
   }, [commits]);
+
+  // Matrix column teams: use real classified teams, fall back to known list
+  const matrixTeams = useMemo(() => {
+    const realTeams = uniqueDepts.filter(d => d !== 'unclassified');
+    if (realTeams.length > 0) return realTeams;
+    return KNOWN_TEAMS;
+  }, [uniqueDepts]);
 
   // Determine the active modules for the selected repository (custom modules or dynamically computed modules)
   const activeModules = useMemo(() => {
@@ -282,12 +504,38 @@ export default function CommitsPage() {
             <h1 className={styles.title}>Commits</h1>
             <p className={styles.subtitle}>Real-time feed across all connected repositories.</p>
           </div>
-          <div className={styles.liveIndicator}>
-            <span className={styles.liveDot} />
-            <span className={styles.liveText}>Live</span>
-            {liveCount > 0 && (
-              <span className={styles.newBadge}>+{liveCount} new</span>
-            )}
+          <div className={styles.headerRight}>
+            {/* View mode toggle */}
+            <div className={styles.viewToggle} role="group" aria-label="View mode">
+              <button
+                id="view-toggle-list"
+                className={`${styles.viewToggleBtn} ${viewMode === 'list' ? styles.viewToggleBtnActive : ''}`}
+                onClick={() => setViewMode('list')}
+                aria-pressed={viewMode === 'list'}
+                title="List view"
+              >
+                <ListIcon />
+                List
+              </button>
+              <button
+                id="view-toggle-matrix"
+                className={`${styles.viewToggleBtn} ${viewMode === 'matrix' ? styles.viewToggleBtnActive : ''}`}
+                onClick={() => setViewMode('matrix')}
+                aria-pressed={viewMode === 'matrix'}
+                title="Team Impact Matrix"
+              >
+                <MatrixIcon />
+                Team Matrix
+              </button>
+            </div>
+
+            <div className={styles.liveIndicator}>
+              <span className={styles.liveDot} />
+              <span className={styles.liveText}>Live</span>
+              {liveCount > 0 && (
+                <span className={styles.newBadge}>+{liveCount} new</span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -407,6 +655,12 @@ export default function CommitsPage() {
               Clear all filters
             </button>
           </div>
+        ) : viewMode === 'matrix' ? (
+          <TeamImpactMatrixView
+            commits={displayed}
+            teams={matrixTeams}
+            onRowClick={handleCommitClick}
+          />
         ) : (
           <div className={styles.commitList}>
             {displayed.map((commit) => (
