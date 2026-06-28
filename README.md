@@ -1,4 +1,4 @@
-﻿<h1 align="center">🔍 TRACER — AI-Powered Engineering Intelligence Platform</h1>
+<h1 align="center">🔍 TRACER — AI-Powered Engineering Intelligence Platform</h1>
 
 <p align="center">
   <strong>A real-time platform that tracks how software changes propagate across teams, modules, and system dependencies — turning every commit into actionable organizational intelligence.</strong>
@@ -6,6 +6,12 @@
 
 <p align="center">
   <em>Built for the hackathon — helping engineering organizations move from reactive firefighting to proactive, AI-driven visibility.</em>
+</p>
+
+<p align="center">
+  <a href="https://canva.link/5m9po3dqa6gbyis" target="_blank"><strong>📊 Slide Deck</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://youtu.be/3IGaLo1Fz9w" target="_blank"><strong>🎥 Pitching Video</strong></a>
 </p>
 
 ---
@@ -72,6 +78,12 @@ The result is a living, real-time map of engineering impact — delivered as an 
 
 * **SDG 9 — Industry, Innovation, and Infrastructure**: Drives digital transformation in software engineering by replacing manual, error-prone cross-team communication with AI-powered, real-time dependency awareness.
 * **SDG 17 — Partnerships for the Goals**: Strengthens collaboration between engineering teams by making the impact of every change visible to everyone — from individual developers to engineering leaders.
+
+---
+
+## 📐 Technical Architecture
+
+![Technical Architecture Diagram](Technical%20Architecture%20TRACER.png)
 
 ---
 
@@ -144,6 +156,10 @@ Ensure you have the following installed:
 5. **Configure Firebase Client SDK**:
 
    Update `src/lib/firebase.ts` with your Firebase project client configuration (API key, project ID, auth domain, etc.).
+
+6. **Setup Demo Environment**:
+   - You can clone the repository [https://github.com/yaotingchun/tracer-testing](https://github.com/yaotingchun/tracer-testing) to test the application by connecting to the cloned repository as an existing repository in the Settings page.
+   - Then, you can make changes to the repository and push them to the remote repository to test the application. You will see the changes reflected in the Commits feed in real time.
 
 ---
 
