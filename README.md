@@ -237,6 +237,19 @@ Results are written back to Firestore and immediately visible to all users via t
 
 ---
 
+## 💰 Pricing Plans
+
+TRACER is offered as a flexible SaaS solution designed for teams of different sizes.
+
+| Plan | Price | Capacity | Included Features |
+| :--- | :--- | :--- | :--- |
+| **Starter Pack** | **RM 99** / month | Up to 10 developers | Basic dependency tracing and impact visualization |
+| **Professional Plan** | **RM 499** / month | Up to 50 developers | Advanced features: AI-powered impact prediction, risk analysis, and team dashboards |
+
+*This ensures that whether you're a startup or a scaling enterprise, TRACER grows with your engineering needs.*
+
+---
+
 ## 🌍 Social Impact
 
 TRACER directly reduces the **human cost of poor engineering visibility**:
