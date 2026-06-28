@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query, orderBy, onSnapshot, where, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -69,6 +70,7 @@ function CommitSkeleton() {
 }
 
 export default function CommitsPage() {
+  const router = useRouter();
   const [commits,       setCommits]       = useState<Commit[]>([]);
   const [repos,         setRepos]         = useState<Repo[]>([]);
   const [filterRepo,    setFilterRepo]    = useState<string>('all');
@@ -130,6 +132,10 @@ export default function CommitsPage() {
     : commits;
 
   const noRepos = !loading && repos.length === 0;
+
+  const handleCommitClick = (commit: Commit) => {
+    router.push(`/commits/${commit.sha}?repoId=${commit.repoId}`);
+  };
 
   return (
     <MainLayout>
@@ -207,10 +213,18 @@ export default function CommitsPage() {
         ) : (
           <div className={styles.commitList}>
             {displayed.map((commit) => (
-              <div key={commit.id} className={styles.commitCard}>
+              <div
+                key={commit.id}
+                className={styles.commitCard}
+                onClick={() => handleCommitClick(commit)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCommitClick(commit); }}
+              >
                 {/* Author avatar */}
                 <div className={styles.avatarCol}>
                   {commit.authorAvatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={commit.authorAvatar}
                       alt={commit.author}
@@ -254,7 +268,7 @@ export default function CommitsPage() {
                   </div>
                 </div>
 
-                {/* SHA + link */}
+                {/* SHA + expand hint */}
                 <div className={styles.shaCol}>
                   <a
                     href={commit.url}
@@ -262,10 +276,14 @@ export default function CommitsPage() {
                     rel="noopener noreferrer"
                     className={styles.shaLink}
                     title={commit.sha}
+                    onClick={e => e.stopPropagation()}
                   >
                     <code>{commit.shortSha ?? commit.sha.slice(0, 7)}</code>
                     <ExternalIcon />
                   </a>
+                  <span className={styles.viewFilesHint}>
+                    View files →
+                  </span>
                 </div>
               </div>
             ))}

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import MainLayout from '@/components/layout/MainLayout';
+import Link from 'next/link';
 import styles from './dashboard.module.css';
 
 export const metadata: Metadata = {
@@ -166,7 +167,7 @@ export default function DashboardPage() {
           <div className={styles.card} id="dashboard-activity">
             <div className={styles['card-header']}>
               <span className={styles['card-title']}>Recent Activity</span>
-              <a href="/commits" className={styles['card-action']}>View all commits →</a>
+              <Link href="/commits" className={styles['card-action']}>View all commits →</Link>
             </div>
             <div className={styles['card-body']}>
               <div className={styles['activity-list']}>
