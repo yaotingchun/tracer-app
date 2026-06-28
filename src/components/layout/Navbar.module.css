@@ -1,0 +1,192 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
+  background: var(--color-brand-black);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  z-index: var(--z-navbar);
+  /* Smooth backdrop blur for premium feel */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Subtle glow line along bottom */
+  box-shadow:
+    0 1px 0 rgba(59,130,246,0.15),
+    0 4px 24px rgba(0,0,0,0.4);
+  animation: slideDown 0.4s ease both;
+}
+
+.inner {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+/* ─── Brand / Logo ─── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+}
+.brand:hover { opacity: 0.85; }
+
+.brand-logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(59,130,246,0.35));
+}
+
+.brand-wordmark {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-inverse);
+  letter-spacing: -0.02em;
+}
+
+.brand-wordmark span {
+  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Navigation Links ─── */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  transition:
+    color            var(--transition-fast),
+    background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--color-text-inverse);
+  background: rgba(255,255,255,0.06);
+}
+
+/* Active state */
+.nav-link--active {
+  color: var(--color-text-inverse) !important;
+  background: rgba(59,130,246,0.15) !important;
+}
+
+/* Active indicator dot */
+.nav-link--active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+}
+
+.nav-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.nav-link--active .nav-icon,
+.nav-link:hover .nav-icon { opacity: 1; }
+
+/* ─── Right Slot ─── */
+.right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-accent), #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-bold);
+  color: white;
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0);
+}
+
+.avatar:hover {
+  box-shadow: 0 0 0 2px var(--color-accent);
+  transform: scale(1.05);
+}
+
+.notification-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  transition:
+    background var(--transition-fast),
+    color      var(--transition-fast);
+}
+.notification-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  border: 2px solid var(--color-brand-black);
+  box-shadow: 0 0 6px var(--color-accent);
+}
+
+@media (max-width: 768px) {
+  .inner {
+    padding: 0 var(--space-4);
+    gap: var(--space-4);
+  }
+  .brand-wordmark { display: none; }
+}

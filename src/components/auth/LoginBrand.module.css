@@ -1,0 +1,107 @@
+.panel {
+  position: relative;
+  width: 50%;
+  min-height: 100vh;
+  background: radial-gradient(circle at 30% 30%, #0a1628 0%, #04050a 80%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-16) var(--space-12);
+}
+
+/* ─── Content ─── */
+.content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: 12%;
+}
+
+.brand-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.logo-wrap {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.logo-img {
+  height: 260px;
+  width: auto;
+  object-fit: contain;
+  margin-left: -32px;
+  margin-bottom: -48px;
+  filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.35));
+  transition: filter var(--transition-base), transform var(--transition-base);
+}
+
+.logo-img:hover {
+  filter: drop-shadow(0 0 32px rgba(96, 165, 250, 0.5));
+  transform: scale(1.02);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.headline {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: var(--fw-extrabold);
+  color: var(--color-text-inverse);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  max-width: 480px;
+}
+
+.headline-accent {
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #60a5fa);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+.subheadline {
+  font-size: var(--text-base);
+  font-weight: var(--fw-normal);
+  color: var(--color-text-inverse-muted);
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+/* ─── Footer ─── */
+.footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.footer-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent);
+}
+
+.footer-text {
+  font-size: var(--text-xs);
+  color: var(--color-text-inverse-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .panel {
+    display: none;
+  }
+}

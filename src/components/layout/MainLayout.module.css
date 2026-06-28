@@ -1,0 +1,9 @@
+.layout {
+  min-height: 100vh;
+  background: var(--color-surface-1);
+}
+
+.main {
+  padding-top: var(--navbar-height);
+  min-height: 100vh;
+}
