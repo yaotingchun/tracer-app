@@ -2,7 +2,8 @@
 
 import Image  from 'next/image';
 import Link   from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
 import styles from './Navbar.module.css';
 
 /* ── Nav Icon SVGs (inline, no deps) ── */
@@ -50,6 +51,14 @@ const BellIcon = () => (
   </svg>
 );
 
+interface NotificationItem {
+  id: string;
+  message: string;
+  type: 'CRITICAL' | 'MEDIUM' | 'LOW';
+  time: string;
+  read: boolean;
+}
+
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', Icon: DashboardIcon },
   { href: '/commits',   label: 'Commits',   Icon: CommitsIcon   },
@@ -59,6 +68,68 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Dropdown States
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+
+  // Refs for clicking outside to close
+  const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Hardcoded real engineering notifications
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
+    {
+      id: 'n1',
+      message: 'Backend team has deployed an API contract update to /v2/users that might affect the Frontend session layer. Please review integration.',
+      type: 'CRITICAL',
+      time: '5 min ago',
+      read: false,
+    },
+    {
+      id: 'n2',
+      message: 'Reward module team just updated the reward logic, you might have to review it!',
+      type: 'MEDIUM',
+      time: '45 min ago',
+      read: false,
+    },
+    {
+      id: 'n3',
+      message: 'auth-service: OAuth2 token refresh logic has been refactored. Staging Safety Index updated.',
+      type: 'LOW',
+      time: '2 hours ago',
+      read: true,
+    },
+  ]);
+
+  const hasUnread = notifications.some(n => !n.read);
+
+  // Click outside listener
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleLogout = () => {
+    // Clear user tokens / local caches
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+    // Redirect to login page
+    router.push('/login');
+  };
 
   return (
     <nav className={styles.navbar} aria-label="Main navigation">
@@ -103,23 +174,91 @@ export default function Navbar() {
 
         {/* Right slot */}
         <div className={styles.right}>
-          <button
-            className={styles['notification-btn']}
-            aria-label="Notifications"
-            id="navbar-notifications"
-          >
-            <BellIcon />
-            <span className={styles['notification-dot']} aria-hidden="true" />
-          </button>
+          {/* Notifications Trigger Wrapper */}
+          <div className={styles.relativeWrapper} ref={notifRef}>
+            <button
+              className={`${styles['notification-btn']} ${showNotifications ? styles.btnActive : ''}`}
+              aria-label="Notifications"
+              id="navbar-notifications"
+              onClick={() => {
+                setShowNotifications(s => !s);
+                setShowProfile(false);
+              }}
+            >
+              <BellIcon />
+              {hasUnread && <span className={styles['notification-dot']} aria-hidden="true" />}
+            </button>
 
-          <div
-            className={styles.avatar}
-            role="button"
-            tabIndex={0}
-            aria-label="User profile"
-            id="navbar-avatar"
-          >
-            T
+            {/* Notification Dropdown Panel */}
+            {showNotifications && (
+              <div className={styles.dropdownPanel} id="notifications-panel">
+                <div className={styles.dropdownHeader}>
+                  <span className={styles.dropdownTitle}>Notifications</span>
+                  {hasUnread && (
+                    <button className={styles.markReadBtn} onClick={handleMarkAllRead}>
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className={styles.dropdownBody}>
+                  {notifications.length === 0 ? (
+                    <p className={styles.emptyText}>No notifications found.</p>
+                  ) : (
+                    notifications.map(item => (
+                      <div key={item.id} className={`${styles.notifItem} ${item.read ? styles.notifRead : ''}`}>
+                        <div className={styles.notifHeader}>
+                          <span className={`${styles.badge} ${styles[`badge${item.type}`]}`}>
+                            {item.type}
+                          </span>
+                          <span className={styles.notifTime}>{item.time}</span>
+                        </div>
+                        <p className={styles.notifMessage}>{item.message}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Profile Trigger Wrapper */}
+          <div className={styles.relativeWrapper} ref={profileRef}>
+            <div
+              className={styles.avatar}
+              role="button"
+              tabIndex={0}
+              aria-label="User profile"
+              id="navbar-avatar"
+              onClick={() => {
+                setShowProfile(s => !s);
+                setShowNotifications(false);
+              }}
+            >
+              T
+            </div>
+
+            {/* Profile Dropdown Panel */}
+            {showProfile && (
+              <div className={styles.dropdownPanelProfile} id="profile-panel">
+                <div className={styles.profileHeader}>
+                  <div className={styles.profileAvatarBig}>T</div>
+                  <div className={styles.profileInfo}>
+                    <span className={styles.profileName}>Yaoting Chun</span>
+                    <span className={styles.profileEmail}>yaotingchun@company.com</span>
+                    <span className={styles.profileRole}>Lead Engineering Architect</span>
+                  </div>
+                </div>
+                <div className={styles.profileDivider} />
+                <div className={styles.profileBody}>
+                  <Link href="/settings" className={styles.profileLink} onClick={() => setShowProfile(false)}>
+                    <span>⚙</span> Settings
+                  </Link>
+                  <button className={styles.logoutBtn} onClick={handleLogout}>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
