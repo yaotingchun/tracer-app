@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MainLayout from '@/components/layout/MainLayout';
 import styles from './repository.module.css';
+import DependencyGraph from '@/components/settings/DependencyGraph';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Repo {
@@ -570,6 +571,9 @@ export default function RepositoryCustomizationPage() {
           </div>
 
         </div>
+
+        {/* Dependency Graph — built from GitHub API, no clone */}
+        <DependencyGraph repoId={id} />
 
       </div>
     </MainLayout>
