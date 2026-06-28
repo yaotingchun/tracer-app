@@ -334,13 +334,17 @@ export default function RepositoryCustomizationPage() {
           <div className={styles.column}>
             
             {/* Modules customization */}
-            <section className={styles.card} aria-labelledby="modules-title">
-              <div>
-                <h2 id="modules-title" className={styles.cardTitle}>
+            <section className={`${styles.card} ${styles.cardModules}`} aria-labelledby="modules-title">
+              <div className={styles.cardHeader}>
+                <div className={`${styles.iconWrapper} ${styles.iconWrapperModules}`}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                  Custom Modules
-                </h2>
-                <p className={styles.cardDesc}>Define the architectural modules for this repository. Adjusting this directly affects the commit filter categories.</p>
+                </div>
+                <div>
+                  <h2 id="modules-title" className={styles.cardTitle}>
+                    Custom Modules
+                  </h2>
+                  <p className={styles.cardDesc}>Define the architectural modules for this repository. Adjusting this directly affects the commit filter categories.</p>
+                </div>
               </div>
 
               <div className={styles.modulesGrid}>
@@ -377,17 +381,21 @@ export default function RepositoryCustomizationPage() {
             </section>
 
             {/* Knowledge Base description and file uploads */}
-            <section className={styles.card} aria-labelledby="kb-title">
-              <div>
-                <h2 id="kb-title" className={styles.cardTitle}>
+            <section className={`${styles.card} ${styles.cardKb}`} aria-labelledby="kb-title">
+              <div className={styles.cardHeader}>
+                <div className={`${styles.iconWrapper} ${styles.iconWrapperKb}`}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                  Knowledge Base Settings
-                </h2>
-                <p className={styles.cardDesc}>Upload details about your company context. This is saved to power customized features and AI interactions.</p>
+                </div>
+                <div>
+                  <h2 id="kb-title" className={styles.cardTitle}>
+                    Knowledge Base Settings
+                  </h2>
+                  <p className={styles.cardDesc}>Upload details about your company context. This is saved to power customized features and AI interactions.</p>
+                </div>
               </div>
 
               {/* Text Business Description */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <div className={styles.businessDescWrapper}>
                 <label htmlFor="business-desc" style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-text-secondary)' }}>
                   Business Description
                 </label>
@@ -469,13 +477,17 @@ export default function RepositoryCustomizationPage() {
 
           {/* Right Column: Memory Agent RAG Chatbot */}
           <div className={styles.column}>
-            <section className={styles.card} style={{ height: '100%' }} aria-labelledby="memory-title">
-              <div>
-                <h2 id="memory-title" className={styles.cardTitle}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                  Memory Agent
-                </h2>
-                <p className={styles.cardDesc}>Interacts with knowledge and memories extracted from documentation files via RAG search.</p>
+            <section className={`${styles.card} ${styles.cardMemory}`} style={{ height: '100%' }} aria-labelledby="memory-title">
+              <div className={styles.cardHeader}>
+                <div className={`${styles.iconWrapper} ${styles.iconWrapperMemory}`}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M9 13a3 3 0 1 0-3-3"/><path d="M15 13a3 3 0 1 1 3-3"/></svg>
+                </div>
+                <div>
+                  <h2 id="memory-title" className={styles.cardTitle}>
+                    Memory Agent
+                  </h2>
+                  <p className={styles.cardDesc}>Interacts with knowledge and memories extracted from documentation files via RAG search.</p>
+                </div>
               </div>
 
               <div className={styles.memoryAgent}>
@@ -485,7 +497,9 @@ export default function RepositoryCustomizationPage() {
                 <div className={styles.extractedList}>
                   {memoryNodes.map((node, i) => (
                     <div key={i} className={styles.memoryNode}>
-                      <span className={styles.memoryBullet}>▪</span>
+                      <span className={styles.memoryBullet}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
                       <span>{node}</span>
                     </div>
                   ))}
@@ -545,8 +559,9 @@ export default function RepositoryCustomizationPage() {
                       type="submit" 
                       disabled={!chatInput.trim() || memoryNodes.length === 0 || agentTyping}
                       className={styles.chatSendBtn}
+                      title="Send message"
                     >
-                      Ask
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                   </form>
                 </div>
