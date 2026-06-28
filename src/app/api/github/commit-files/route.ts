@@ -14,6 +14,7 @@ import {
   isRelevantFile,
   type ChangedFile,
 } from '@/lib/github';
+import { classifyCommit } from '@/lib/classify';
 import { FieldValue } from 'firebase-admin/firestore';
 
 // GitHub caps the files list at 300 entries per commit.
@@ -54,8 +55,33 @@ export async function POST(req: NextRequest) {
     const cacheRef = adminDb.collection('commitFiles').doc(sha);
     const cached = await cacheRef.get();
     if (cached.exists) {
-      return NextResponse.json(cached.data());
+      const cachedData = cached.data() as Record<string, unknown>;
+      // If this cached entry pre-dates classification, back-fill it now
+      if (!cachedData.department) {
+        const files = (cachedData.changed_files as Array<{
+          filename: string; content_after?: string; patch?: string;
+        }> ?? []);
+        const classification = classifyCommit(
+          files.map(f => ({ filename: f.filename, content_after: f.content_after, patch: f.patch })),
+          String(cachedData.message ?? '')
+        );
+        const classFields = {
+          department:                   classification.department,
+          module:                       classification.module,
+          module_classification_method: classification.module_classification_method,
+          file_classifications:         classification.file_classifications,
+        };
+        // Write back async — don't block the response
+        cacheRef.update(classFields).catch(() => {});
+        adminDb.collection('commits').doc(sha).set({
+          ...classFields,
+          classifiedAt: FieldValue.serverTimestamp(),
+        }, { merge: true }).catch(() => {});
+        return NextResponse.json({ ...cachedData, ...classFields });
+      }
+      return NextResponse.json(cachedData);
     }
+
 
     // ── 3. Fetch commit detail from GitHub ────────────────────────────────────
     const detail = await fetchCommitDetail(owner, repoName, sha, token);
@@ -106,7 +132,17 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // ── 6. Build result payload ───────────────────────────────────────────────
+    // ── 6. Classify commit (department + module) — fully deterministic ─────────
+    const classification = classifyCommit(
+      changed_files.map(f => ({
+        filename:       f.filename,
+        content_after:  f.content_after,
+        patch:          f.patch,
+      })),
+      detail.commit.message
+    );
+
+    // ── 7. Build result payload ───────────────────────────────────────────────
     const result = {
       sha,
       owner,
@@ -119,15 +155,30 @@ export async function POST(req: NextRequest) {
       total_files_changed: allFiles.length,
       relevant_files_count: relevantFiles.length,
       changed_files,
+      // Classification fields
+      department:                   classification.department,
+      module:                       classification.module,
+      module_classification_method: classification.module_classification_method,
+      file_classifications:         classification.file_classifications,
       fetchedAt:   FieldValue.serverTimestamp(),
     };
 
-    // ── 7. Persist to Firestore (async — don't block the response) ────────────
+    // ── 8. Persist to Firestore (async — don't block response) ───────────────
+    // Write full detail to commitFiles/{sha}
     cacheRef.set(result).catch((err) =>
-      console.error('[commit-files] Firestore write failed:', err)
+      console.error('[commit-files] commitFiles write failed:', err)
+    );
+    // Write classification back to commits/{sha} so the real-time feed can filter
+    adminDb.collection('commits').doc(sha).set({
+      department:                   classification.department,
+      module:                       classification.module,
+      module_classification_method: classification.module_classification_method,
+      classifiedAt: FieldValue.serverTimestamp(),
+    }, { merge: true }).catch((err) =>
+      console.error('[commit-files] commits classification write failed:', err)
     );
 
-    // Return without the Firestore sentinel so it serialises cleanly
+    // Return without Firestore sentinels so it serialises cleanly
     return NextResponse.json({
       ...result,
       fetchedAt: new Date().toISOString(),

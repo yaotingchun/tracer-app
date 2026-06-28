@@ -924,3 +924,179 @@
   flex-direction: column;
   gap: var(--space-4);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   UNIFIED TOOLBAR (repo select + author input + classification pills)
+   ═══════════════════════════════════════════════════════════════ */
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.toolbarTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.toolbarPills {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-1);
+}
+
+.pillGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.pillSectionLabel {
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+.pillDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 var(--space-2);
+  flex-shrink: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: var(--fw-medium);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pill:hover {
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+}
+
+.pillActive {
+  border-color: var(--color-accent) !important;
+  color: var(--color-accent) !important;
+  background: var(--color-accent-subtle) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+.clearBtn {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.clearBtn:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-text-muted);
+  color: var(--color-text-primary);
+}
+
+/* ─── Inline classification chips on commit cards ─── */
+
+.inlineChip {
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.moduleChip {
+  background: rgba(124,58,237,0.07);
+  border-color: rgba(124,58,237,0.18);
+  color: #7c3aed;
+}
+
+/* ─── Legacy classification badges (kept for CSS module completeness) ─── */
+
+.classifyFilters { display: none; }
+
+.classifyBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: 3px;
+}
+
+.classifyBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.moduleBadge {
+  background: rgba(124,58,237,0.07);
+  border-color: rgba(124,58,237,0.2);
+  color: #7c3aed;
+}
+
+/* ─── No-classification hint ─── */
+.classifyHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-surface-1);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  animation: fadeIn 0.4s ease both;
+}
+
